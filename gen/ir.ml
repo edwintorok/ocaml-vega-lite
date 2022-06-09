@@ -550,6 +550,11 @@ let parseAliasSpec : accum parser = fun sofar name node ->
   let%bind myType = parseAlias sofar name node in
   Ok (StringMap.singleton modName (myType, None))
 
+let parseArraySpec : accum parser = fun sofar name node ->
+  let modName = chooseModuleName name in
+  let%bind (myType, innerTypes) = parseTR_list sofar name node in
+  Ok (StringMap.add modName ((Alias myType), (getDescription node)) innerTypes)
+
 (*
 Parses a top-level type spec. These are all variants or records, there are no
 type aliases for simpler types defined.
@@ -558,7 +563,8 @@ let parseTypeSpec : accum parser = fun sofar name node ->
   untilSuccess ("parseTypeSpec: no parse of '" ^ name ^ "'") [
     parseVariantSpec sofar name node; (* NOTE: Must go before 'alias' to prevent it from snaffling enums *)
     parseAliasSpec sofar name node;
-    parseRecordSpec sofar name node
+    parseRecordSpec sofar name node;
+    parseArraySpec sofar name node
   ]
 
 type t = (typeName * typeSpec * description) list
