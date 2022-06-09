@@ -50,7 +50,7 @@ let rec type_of_tr (prefix : string) (tr : Ir.typeRef) : Parsetree.core_type =
   | AnonymousVariant cl -> type_of_ctors prefix cl
   | Ref s -> Gu.simple_type (prefix ^ s ^ ".t")
   | List el -> [%type: [%t type_of_tr prefix el] list]
-  | Null -> raise NullType
+  | Null -> [%type: unit]
 
 and rf_of_ctor (prefix : string) ((name, trs) : Ir.ctor) : Parsetree.row_field =
   let typs = List.map (type_of_tr prefix) trs in
@@ -169,7 +169,7 @@ let rec to_json_of_tr (tr : Ir.typeRef) (alreadyOptional : bool) : Parsetree.exp
     let yojson_of_el= [%e to_json_of_tr el false]  in
     (`List (List.map yojson_of_el l) : Yojson.Safe.json)
   ]
-  | Null -> raise NullType
+  | Null -> [%expr fun () -> `Null]
 
 and to_json_of_ctors (ctors : Ir.ctor list) (alreadyOptional : bool) : Parsetree.expression =
   let isOption = not alreadyOptional && List.exists ctorWrapsNull ctors in
