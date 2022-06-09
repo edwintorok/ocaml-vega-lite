@@ -475,10 +475,10 @@ and parseTR_reference : (typeRef * accum) parser = fun sofar name node ->
   Ok (refr, StringMap.empty)
 
 and parseTR_json : (typeRef * accum) parser = fun sofar name node ->
-  prependError "parseTR_simple: " @@
+  prependError "parseTR_json: " @@
   match node with
   (* Sometimes an 'any' type reference is denoted "{}" *)
-  | `Assoc [] -> Ok (JSON, StringMap.empty)
+  | `Assoc [] | `Assoc ["description", _] -> Ok (JSON, StringMap.empty)
   (* Sometimes it is denoted {"type": "object"}, but we should let the record parser have first crack. *)
   | _ -> jsonKeyIs node "type" "object" >>= fun () -> Ok (JSON, StringMap.empty)
 
