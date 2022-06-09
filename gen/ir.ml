@@ -466,6 +466,9 @@ and parseTR_anonRecord : (typeRef * accum) parser = fun sofar name node ->
 and parseTR_list : (typeRef * accum) parser = fun sofar name node ->
   prependError "parseTR_list: " @@
   jsonKeyIs node "type" "array" >>= fun () ->
+  match node with
+  | `Assoc ["type", `String "array"] -> Ok (List JSON, StringMap.empty)
+  | _ ->
   let%bind (itemTypeRef, innerTypes) = (jsonGet node "items") >>= (parseTypeRef sofar name) in
   Ok (List itemTypeRef, innerTypes)
 
