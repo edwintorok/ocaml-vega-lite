@@ -114,9 +114,18 @@ let equalTSAndDesc ((t1, d1) : (typeSpec * description)) ((t2, d2) : (typeSpec *
   | false -> false
   | true -> equalTypeSpec t1 t2
 
+let unsafe_re = Str.regexp "[][<>()|\",-]"
+
 (* Convert any old name to a suitable module name. *)
 let chooseModuleName (name : string) : string =
-  String.capitalize_ascii name
+  String.capitalize_ascii name |> Str.global_replace unsafe_re "_"
+
+let chooseModuleName (name : string) : string =
+  String.capitalize_ascii name |> Str.global_replace unsafe_re "_"
+
+let chooseFieldName (name : string) : string =
+  Str.global_replace unsafe_re "_" name
+  |> Str.global_replace (Str.regexp "for\|method") "\\0_"
 
 (* The IR data structure is a map from type names to type specifications. *)
 type accum = (typeSpec * description) StringMap.t
@@ -145,7 +154,7 @@ let getDescription (node : json) : description =
 
 (* Choose a variant name from a string. *)
 let chooseVariantName (raw : string) : string =
-  String.capitalize_ascii @@ Str.global_replace (Str.regexp "-") "_" raw
+  String.capitalize_ascii @@ Str.global_replace (Str.regexp "[][<>()|\",-]") "_" raw
 
 (*
 In the schema, anyOf's don't need ML-like variant constructors to wrap the different
@@ -430,7 +439,7 @@ and parseRecord : (typeSpec * accum) parser = fun tSofar name node ->
           Finally, append the field represented by the current node to the list of
           fields.
         *)
-        let allFields : field list = (fieldName, fieldTypeRef, desc, isRequired) :: fieldsSofar in
+        let allFields : field list = (chooseFieldName fieldName, fieldTypeRef, desc, isRequired) :: fieldsSofar in
         Ok (allInnerTypes, allFields)
       in
       List.fold_left reducer (Ok (StringMap.empty, [])) props

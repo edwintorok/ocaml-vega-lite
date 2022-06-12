@@ -515,15 +515,16 @@ let rec nicknameTrCtors (tr : Ir.typeRef) : Ir.typeRef =
   | x -> x
 
 and nicknameCtor ((name, trs) : Ir.ctor) : Ir.ctor =
-  if (List.length trs) = 0 then
+  if (List.length trs) = 0 then begin
     (* Don't rename enums, as they occur in the spec. *)
     (name, trs)
+  end
   else let nickname =
-    if Gu.regexp_matches (Str.regexp "Field") name then match trs with
+   (* if Gu.regexp_matches (Str.regexp "Field") name then match trs with
       | [Ir.List _] -> "Fields"
       | _ -> "Field"
-    else name
-     |> replace_if_match "Value" "Value"
+    else *) name
+ (*    |> replace_if_match "Value" "Value"*)
      |> replace_if_match "Number" "Num"
      |> replace_if_match "Params" "Params"
      |> replace_if_match "CompositeUnit" "Unit"
@@ -544,15 +545,13 @@ and nicknameCtor ((name, trs) : Ir.ctor) : Ir.ctor =
      |> replace_match "Utc" "U"
      |> replace_match "_right" "R"
      |> replace_match "_left" "L"
-     |> replace_match "\\[" ""
-     |> replace_match "\\]" ""
      |> kill_suffix "Ref"
      |> kill_suffix "Op"
      |> kill_suffix "DataFormat"
      |> kill_suffix "Data"
      |> kill_suffix "Spec"
      |> kill_suffix "Filter"
-     |> kill_suffix "Selection"
+  (*   |> kill_suffix "Selection"*)
      |> kill_prefix "Selection"
      |> kill_suffix "_Bind"
      |> kill_suffix "Binding"
