@@ -412,11 +412,15 @@ let setters_of_ts (ir : Ir.t) (name : string) (ts : Ir.typeSpec) : (Parsetree.si
   | Ir.Record (fields, additional) -> setters_of_fields ir name fields additional
   | _ -> ([], [])
 
+let unsafe = Str.regexp "[\\[\\]]"
+let sanitize s =
+  Str.global_replace unsafe "" s
+
 let mods_of_ir (derivers: string list) (ir : Ir.t) : Parsetree.structure =
   let mod_mapper ((name, spec, desc) : (Ir.typeName * Ir.typeSpec * Ir.description)) : Parsetree.module_binding =
     let items = ([
       spec |> si_of_ts derivers;
-      [%stri [%e Gu.expr_of_string ("__doc__" ^ name)]];
+      [%stri [%e Gu.expr_of_string ("__doc__" ^ (sanitize name))]];
       to_json_of_ts spec |> Gu.sitem_of_expr "to_yojson";
     ]) in
     let sigitems = ([
@@ -444,7 +448,7 @@ let mods_of_ir (derivers: string list) (ir : Ir.t) : Parsetree.structure =
 let insert_docs (ir : Ir.t) (s : string) : string =
   let reducer (sofar : string) (name, spec, desc) : string =
     let doc = doc_comment_of_desc spec desc in
-    let re = Str.regexp ("[ \t]*;;\"__doc__" ^ name ^ "\"") in
+    let re = Str.regexp ("[ \t]*;;\"__doc__" ^ (sanitize name) ^ "\"") in
     (* let _ = try
       let idx = Str.search_forward re s in
       with _ -> print_endline ("No match for "^ name)
@@ -540,6 +544,8 @@ and nicknameCtor ((name, trs) : Ir.ctor) : Ir.ctor =
      |> replace_match "Utc" "U"
      |> replace_match "_right" "R"
      |> replace_match "_left" "L"
+     |> replace_match "\\[" ""
+     |> replace_match "\\]" ""
      |> kill_suffix "Ref"
      |> kill_suffix "Op"
      |> kill_suffix "DataFormat"
