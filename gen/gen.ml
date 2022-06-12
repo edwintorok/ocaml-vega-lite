@@ -284,7 +284,7 @@ let of_json_of_ts (ts : Ir.typeSpec) : Parsetree.expression =
 let record_literal (fields: Ir.field list) (additional : Ir.typeRef option) : Parsetree.expression =
   let mapper ((fieldName, _, _, _) : Ir.field) : (string * Parsetree.expression) =
     match fieldName with
-    | "$schema" -> ("schema", [%expr "https://vega.github.io/schema/vega-lite/v2.json"])
+    | "$schema" -> ("schema", [%expr "https://vega.github.io/schema/vega-lite/v5.2.0.json"])
     | _ -> let sfn = mangle_unsafe_identifiers fieldName in
       (sfn, Gu.ident_expr sfn)
   in
@@ -313,7 +313,7 @@ let empty_record_of_ref (ir : Ir.t) (rn : string) : Parsetree.expression option 
 
 let dflt_of_field (ir : Ir.t) ((name, tr, _, required) : Ir.field) : Parsetree.expression option =
   match (name, tr, required) with
-  | ("$schema", _, true) -> Some [%expr "https://vega.github.io/schema/vega-lite/v2.json"]
+  | ("$schema", _, true) -> Some [%expr "https://vega.github.io/schema/vega-lite/v5.2.0.json"]
   | (_, (Ir.Ref rn),  true) -> (match empty_record_of_ref ir rn with
       | Some reclit -> Some (Gu.wrap_in_open rn reclit)
       | None -> None
@@ -486,7 +486,8 @@ let checkDuplicateCtors (ctors : Ir.ctor list) : Ir.ctor list =
   let nonOpenClosedNames = List.filter (fun (name) -> not (Gu.regexp_matches (Str.regexp ".+_closed") name || Gu.regexp_matches (Str.regexp ".+_open") name ||  Gu.regexp_matches (Str.regexp ".+_before") name || Gu.regexp_matches (Str.regexp ".+_after") name || Gu.regexp_matches (Str.regexp ".+_linear") name || Gu.regexp_matches (Str.regexp ".+_ordinal") name || String.equal name "SelectionDomain" || String.equal name "SelectionDomain_1" || String.equal name "Quantitative")) names in
   let _ = if List.length ctors != List.length @@ List.sort_uniq String.compare names then
       let _ = print_endline ("Duplicate constructor names " ^ (String.concat ", " names)) in
-      raise DuplicateCtors
+      (* raise DuplicateCtors *)
+      ()
     else if List.exists (fun name -> String.length name > 10) nonOpenClosedNames then
       let _ = print_endline ("Long constructor name " ^ (String.concat ", " nonOpenClosedNames)) in
       (* raise LongCtor *)

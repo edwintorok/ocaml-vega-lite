@@ -5,7 +5,7 @@
    ocamlbuild -use-ocamlfind -package vega-lite,ppx_deriving_yojson bar.byte --
 *)
 
-open VegaLite.V2
+open VegaLite.V5
 
 (*
   Create a row type and equip it with a to-yojson function so it can be used as
@@ -24,13 +24,13 @@ let dataValues = [
   ]
 
 (* Wrap the JSON data in a vega-lite Data object *)
-let data = `Inline (InlineData.make ~values:(`Jsons (List.map row_to_yojson dataValues)) ())
+let data = `DataSource (`Inline (InlineData.make ~values:(`Jsons (List.map row_to_yojson dataValues)) ()))
 
 (* Create a VegaLite encoding for a bar chart. *)
 let encoding =
-  let xf = PositionFieldDef.make ~field:(`String "a") ~typ:`Ordinal () in
-  let yf = PositionFieldDef.make ~field:(`String "b") ~typ:`Quantitative () in
-  EncodingWithFacet.make ~x:(`Field xf) ~y:(`Field yf) ()
+  let xf = PositionFieldDef.make ~field:(`FieldName "a") ~typ:`Ordinal () in
+  let yf = PositionFieldDef.make ~field:(`FieldName "b") ~typ:`Quantitative () in
+  FacetedEncoding.make ~x:(`PositionFieldDef xf) ~y:(`PositionFieldDef yf) ()
 
 (*
   Actually create the spec. We'll accept the defaults for most fields, so they'll
@@ -39,10 +39,10 @@ let encoding =
 *)
 let description = "A simple bar chart with embedded data."
 let jsonSpec =
-  let open TopLevelFacetedUnitSpec in
+  let open TopLevelUnitSpec in
   make ~data ~encoding ~mark:(`Mark `Bar) ~description ()
   |> to_yojson
 
 
 (* Uncomment to print the JSON spec to stdout. *)
-(* let () = jsonSpec |> Yojson.Safe.pretty_to_string |> print_endline *)
+let () = jsonSpec |> Yojson.Safe.pretty_to_string |> print_endline
